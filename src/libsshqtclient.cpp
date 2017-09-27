@@ -561,17 +561,25 @@ QString LibsshQtClient::unknownHostMessage()
 QString LibsshQtClient::hostPublicKeyHash()
 {
     QString string;
-    int hash_len = 0;
     unsigned char *hash = NULL;
     char *hexa = NULL;
+    size_t hash_len = 0;
+    ssh_key key;
 
-    hash_len = ssh_get_pubkey_hash(session_, &hash);
-    hexa = ssh_get_hexa(hash, hash_len);
-
-    string = QString(hexa);
-
-    free(hexa);
-    free(hash);
+    if(ssh_get_publickey(session_, &key) == SSH_OK)
+    {
+        if(ssh_get_publickey_hash(key, SSH_PUBLICKEY_HASH_SHA1, &hash, &hash_len) == 0)
+        {
+            hexa = ssh_get_hexa(hash, hash_len);
+            if(hexa)
+            {
+              string = QString::fromLatin1(hexa);
+              ssh_string_free_char(hexa);
+            }
+            ssh_clean_pubkey_hash(&hash);
+        }
+        ssh_key_free(key);
+    }
 
     return string;
 }

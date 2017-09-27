@@ -23,7 +23,7 @@ namespace LibsshQt
     inline QString hexAndName(QObject *object)
     {
         quint64 val    = reinterpret_cast<quint64>(object);
-        QString hex    = QString("%1").arg(val, 0, 16);
+        QString hex    = QString::number(val, 16);
         QString name   = object->metaObject()->className();
         return hex.toUpper() + "-" + name;
     }
