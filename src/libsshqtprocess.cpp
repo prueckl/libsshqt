@@ -332,6 +332,12 @@ void LibsshQtProcess::processState()
             }
 
             exit_code_ = ssh_channel_get_exit_status(channel_);
+            if(exit_code_ == -1)
+            {
+                LIBSSHQT_DEBUG("Exit code not ready yet");
+                client_->enableWritableNotifier();
+                return;
+            }
 
             LIBSSHQT_DEBUG("Process channel EOF");
             LIBSSHQT_DEBUG("Command exit code:"     << exit_code_);
