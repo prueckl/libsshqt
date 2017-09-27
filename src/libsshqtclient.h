@@ -202,7 +202,7 @@ private:
     QString         debug_prefix_;
     bool            debug_output_;
 
-    QTimer          timer_;
+    QTimer          *timer_;
     ssh_session     session_;
     State           state_;
     bool            process_state_running_;

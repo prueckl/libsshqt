@@ -85,7 +85,7 @@ private slots:
                       QString &prefix, QString &line);
 
 private:
-    QTimer                  timer_;
+    QTimer                  *timer_;
     State                   state_;
     QString                 command_;
     int                     exit_code_;

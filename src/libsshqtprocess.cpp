@@ -17,6 +17,7 @@
 
 LibsshQtProcess::LibsshQtProcess(LibsshQtClient *parent) :
     LibsshQtChannel(false, parent, parent),
+    timer_(new QTimer(this)),
     state_(StateClosed),
     exit_code_(-1),
     stderr_(new LibsshQtProcessStderr(this))
@@ -25,10 +26,10 @@ LibsshQtProcess::LibsshQtProcess(LibsshQtClient *parent) :
 
     LIBSSHQT_DEBUG("Constructor");
 
-    timer_.setSingleShot(true);
-    timer_.setInterval(0);
+    timer_->setSingleShot(true);
+    timer_->setInterval(0);
 
-    connect(&timer_, SIGNAL(timeout()),        this, SLOT(processState()));
+    connect(timer_, SIGNAL(timeout()),        this, SLOT(processState()));
     connect(parent,  SIGNAL(error()),          this, SLOT(handleClientError()));
     connect(parent,  SIGNAL(doProcessState()), this, SLOT(processState()));
     connect(parent,  SIGNAL(doCleanup()),      this, SLOT(closeChannel()));
@@ -156,7 +157,7 @@ void LibsshQtProcess::openChannel()
 {
     if ( state_ == StateClosed ) {
         setState(StateWaitClient);
-        timer_.start();
+        timer_->start();
     }
 }
 
@@ -221,7 +222,7 @@ void LibsshQtProcess::setState(State state)
 
 void LibsshQtProcess::queueCheckIo()
 {
-    timer_.start();
+    timer_->start();
 }
 
 void LibsshQtProcess::processState()
@@ -238,7 +239,7 @@ void LibsshQtProcess::processState()
     {
         if ( client_->state() == LibsshQtClient::StateOpened ) {
             setState(StateOpening);
-            timer_.start();
+            timer_->start();
         }
         return;
     } break;
@@ -271,7 +272,7 @@ void LibsshQtProcess::processState()
 
         case SSH_OK:
             setState(StateExec);
-            timer_.start();
+            timer_->start();
             return;
 
         default:
@@ -303,7 +304,7 @@ void LibsshQtProcess::processState()
 
             stderr_->open();
             setState(StateOpen);
-            timer_.start();
+            timer_->start();
             return;
 
         default:

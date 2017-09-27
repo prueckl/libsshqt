@@ -13,6 +13,7 @@
 LibsshQtClient::LibsshQtClient(QObject *parent) :
     QObject(parent),
     debug_output_(false),
+    timer_(new QTimer(this)),
     session_(0),
     state_(StateClosed),
     process_state_running_(false),
@@ -30,9 +31,9 @@ LibsshQtClient::LibsshQtClient(QObject *parent) :
         LIBSSHQT_DEBUG("Constructor");
     }
 
-    timer_.setSingleShot(true);
-    timer_.setInterval(0);
-    connect(&timer_, SIGNAL(timeout()), this, SLOT(processStateGuard()));
+    timer_->setSingleShot(true);
+    timer_->setInterval(0);
+    connect(timer_, SIGNAL(timeout()), this, SLOT(processStateGuard()));
 
     if (debug_output_) {
         setVerbosity(LogProtocol);
@@ -290,7 +291,7 @@ void LibsshQtClient::connectToHost()
 {
     if ( state_ == StateClosed ) {
         setState(StateInit);
-        timer_.start();
+        timer_->start();
     }
 }
 
@@ -352,7 +353,7 @@ void LibsshQtClient::useAuth(UseAuths auths, bool enabled)
         use_auths_ |= auths;
         if ( state_ == StateAuthChoose || state_ == StateAuthAllFailed ) {
             setState(StateAuthContinue);
-            timer_.start();
+            timer_->start();
         }
 
     } else {
@@ -413,7 +414,7 @@ void LibsshQtClient::setPassword(QString password)
 
     if ( state_ == StateAuthNeedPassword ) {
         setState(StateAuthPassword);
-        timer_.start();
+        timer_->start();
     }
 }
 
@@ -474,7 +475,7 @@ void LibsshQtClient::setKbiAnswers(QStringList answers)
         }
 
         setState(StateAuthKbi);
-        timer_.start();
+        timer_->start();
 
     } else {
         LIBSSHQT_CRITICAL("Cannot set KBI answers because state is" << state_);
@@ -586,7 +587,7 @@ bool LibsshQtClient::markCurrentHostKnown()
     case SSH_OK:
         LIBSSHQT_DEBUG("Added current host to known host list");
         setState(StateIsKnown);
-        timer_.start();
+        timer_->start();
         return true;
 
     case SSH_ERROR:
@@ -755,22 +756,22 @@ void LibsshQtClient::tryNextAuth()
     } else if ( use_auths_ & UseAuthNone ) {
         use_auths_ &= ~UseAuthNone;
         setState(StateAuthNone);
-        timer_.start();
+        timer_->start();
 
     } else if ( use_auths_ & UseAuthAutoPubKey ) {
         use_auths_ &= ~UseAuthAutoPubKey;
         setState(StateAuthAutoPubkey);
-        timer_.start();
+        timer_->start();
 
     } else if ( use_auths_ & UseAuthPassword ) {
         use_auths_ &= ~UseAuthPassword;
         setState(StateAuthPassword);
-        timer_.start();
+        timer_->start();
 
     } else if ( use_auths_ & UseAuthKbi ) {
         use_auths_ &= ~UseAuthKbi;
         setState(StateAuthKbi);
-        timer_.start();
+        timer_->start();
     }
 }
 
@@ -893,7 +894,7 @@ void LibsshQtClient::processState()
                             &tmp_port, QString::number(port_)))
         {
             setState(StateConnecting);
-            timer_.start();
+            timer_->start();
             return;
         }
 
@@ -920,7 +921,7 @@ void LibsshQtClient::processState()
 
         case SSH_OK:
             setState(StateIsKnown);
-            timer_.start();
+            timer_->start();
             return;
 
         default:
@@ -1076,7 +1077,7 @@ void LibsshQtClient::handleAuthResponse(int         rc,
         LIBSSHQT_DEBUG("Authentication success:" << auth);
         succeeded_auth_ = auth;
         setState(StateOpened);
-        timer_.start();
+        timer_->start();
         return;
 
     default:
